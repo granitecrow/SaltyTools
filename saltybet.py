@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import random
+import getpass
 
 import requests
 import json
@@ -28,8 +29,9 @@ class player(Enum):
 
 def main():
     # Login to SaltyBet
-    #TODO: ask user for email and password
-    session, request = authenticate.login(config.EMAIL, config.PASSWORD)
+    user = input("Email: ")
+    pwd = getpass.getpass()
+    session, request = authenticate.login(user, pwd)
 
     site = saltysite.scrape(session, request)
     db = saltydb.Database('saltybet.sqlite3.bin')
@@ -92,7 +94,7 @@ def main():
 
             print("Betting $" + str(wager))
 
-            (fighter, wager) = determinebet(player1stats, player2stats)
+            #(fighter, wager) = determinebet(player1stats, player2stats)
             placebet(session, fighter, wager)
             prev_balance = site.get_USER_balance()
             # capture the datetime
