@@ -40,7 +40,8 @@ class Database(object):
             'losses':query[3],
             'fights':query[4],
             'win_ratio':query[5],
-            'lose_ratio':query[6]}
+            'lose_ratio':query[6],
+            'elo':query[7]}
 
     def ranking_to_query(self,obj):
         return (obj['id'],
@@ -49,28 +50,29 @@ class Database(object):
         obj['losses'],
         obj['fights'],
         obj['win_ratio'],
-        obj['lose_ratio'])
+        obj['lose_ratio'],
+        obj['elo'])
 
     def retrieve_fighter(self, fighter):
         query_str='select * from rankings where fighter=?'
         self.cursor.execute(query_str,(fighter,))
         query = self.cursor.fetchone()
-        if not query or len(query) != 7:
-            query = (None, fighter, 0, 0, 0, 0, 0)
+        if not query or len(query) != 8:
+            query = (None, fighter, 0, 0, 0, 0, 0, 1000)
         ranking = self.ranking_from_query(query)
         return ranking
 
-    def insert_ranking(self, winner, loser):
+    def insert_ranking(self, winner, winner_rank, loser, loser_rank):
         # insert match to improve rankings
-        insert_str='insert or replace into rankings(id,fighter,wins,losses,fights,win_ratio,lose_ratio) values(?,?,?,?,?,?,?)'
+        insert_str='insert or replace into rankings(id,fighter,wins,losses,fights,win_ratio,lose_ratio,elo) values(?,?,?,?,?,?,?,?)'
 
         #Winner Entry
-        print('The winner is ' + winner)
         winner=self.retrieve_fighter(winner)
         winner['wins']+=1
         winner['fights']+=1
         winner['win_ratio']=int(winner['wins']/float(winner['fights'])*100)
         winner['lose_ratio']=100-winner['win_ratio']
+        winner['elo'] = winner_rank
         self.cursor.execute(insert_str,self.ranking_to_query(winner))
         self.commit()
 
@@ -80,9 +82,10 @@ class Database(object):
         loser['fights']+=1
         loser['win_ratio']=int(loser['wins']/float(loser['fights'])*100)
         loser['lose_ratio']=100-loser['win_ratio']
+        loser['elo'] = loser_rank
         self.cursor.execute(insert_str,self.ranking_to_query(loser))
         self.commit()
 
 
-    #def insert_fight(seld, winner, loser):
+    #def insert_fight(self, winner, loser):
         # insert fight results

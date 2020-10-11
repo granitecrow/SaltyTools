@@ -61,8 +61,11 @@ class scrape:
             new_match = json.loads(refreshContent)
 
         if (self.match_json != new_match):
-            self.match_json = new_match
-            soup = BeautifulSoup(self.request.content, 'html.parser')
-            self.balance = int(soup.find(id="balance").string.replace(',',''))
-            self.betStreak = soup.find("span", id="betStreak")
-            self.leaderboardRank = soup.find("span", id="leaderboardRank")
+            try:
+                self.match_json = new_match
+                soup = BeautifulSoup(self.request.content, 'html.parser')
+                self.balance = int(soup.find(id="balance").string.replace(',',''))
+                self.betStreak = soup.find("span", id="betStreak")
+                self.leaderboardRank = soup.find("span", id="leaderboardRank")
+            except:
+                pass
