@@ -21,10 +21,10 @@ Future major enhancements and larger projects:
 ```
 $ pip install -r requirements.txt
 ```
-3. run saltybet.py
-'''
+3. run saltybet.py:
+```
 $ python saltybet.py
-'''
+```
 4. login with your email and password for saltybet
 
 ---
