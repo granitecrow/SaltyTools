@@ -80,7 +80,8 @@ class scrape:
         # Refresh the request
         self.request = self.get_retry()
         refreshContent = self.session.get(config.STATE_URL).content
-        new_match = json.loads(refreshContent)
+        if(refreshContent is not None):
+            new_match = json.loads(refreshContent)
 
         if (self.match_json != new_match):
             try:
