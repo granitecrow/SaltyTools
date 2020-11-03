@@ -28,6 +28,23 @@ class scrape:
     def get_USER_balance(self):
         return self.balance
 
+    def get_match_type(self):
+        note = self.match_json['remaining']
+        if "left in the bracket" in note:               # '_ characters are left in the bracket!' -> tournament
+            return "tournament"
+        elif "exhibitions after the tournament" in note: # 'FINAL ROUND! Stay tuned for exhibitions after the tournament!' --> tournament
+            return "tournament"
+        elif "until the next tournament" in note:       # '_ more matches until the next tournament!' -> matchmaking
+            return "matchmaking"
+        elif "exhibition matches left" in note:         # '_ exhibition matches left!' --> exhibition
+            return "exhibition"
+        elif "Exhibition mode start" in note:           # 'Exhibition mode start!' --> exhibition
+            return "exhibition"
+        elif "after the next exhibition match" in note:  #'Matchmaking mode will be activated after the next exhibition match!'
+            return "exhibition"
+        else:
+            return "exhibition" # because its safer to bet little!
+      
     def get_betting_status(self):
         return self.match_json['status']
 
@@ -49,16 +66,21 @@ class scrape:
     def get_remaining(self):
         return self.match_json['remaining']
 
+
+    def get_retry(self):
+        retries = 5
+        while retries:
+            try:
+                return self.session.get(self.request.url)
+            except:
+                time.sleep(1)
+                retries -= 1
+
     def update(self):
         # Refresh the request
-        self.request = self.session.get(self.request.url)
-
-        # Check to see if the match status changed
+        self.request = self.get_retry()
         refreshContent = self.session.get(config.STATE_URL).content
-        if refreshContent == None or refreshContent == "":
-            print('None or empty for data file')
-        else:
-            new_match = json.loads(refreshContent)
+        new_match = json.loads(refreshContent)
 
         if (self.match_json != new_match):
             try:

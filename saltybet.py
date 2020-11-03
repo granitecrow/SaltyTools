@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 #local imports
 import authenticate
 from placebet import *
+from consoledisplay import *
 import saltysite
 import config
 import saltydb
@@ -26,40 +27,6 @@ from elo import *
 class player(Enum):
     P1 = 'player1'
     P2 = 'player2'
-
-
-def print_match_details(fighter1, fighter2, Pa, Pb):
-    print("MATCH :: Fighter: {0} [ W: {1} | L: {2} | W%: {3} | R: {4:.0f}] Fighter: {5} [ W: {6} | L: {7} | W%: {8} | R: {9:.0f} ]".format(fighter1['fighter'], fighter1['wins'], fighter1['losses'], fighter1['win_ratio'], fighter1['elo'], fighter2['fighter'], fighter2['wins'], fighter2['losses'], fighter2['win_ratio'], fighter2['elo']))
-    print("MATCH :: Fighter {0} has {1:.0%} probability of winning".format(fighter1['fighter'], Pa))
-    print("MATCH :: Fighter {0} has {1:.0%} probability of winning".format(fighter2['fighter'], Pb))
-
-def print_last_match_results(previous_balance, total_balance, placed_bet):
-    if (previous_balance < total_balance):
-        difference = total_balance - previous_balance
-        print("WINNER :: ${}!".format(difference))
-    elif (previous_balance > total_balance):
-        difference = previous_balance - total_balance
-        print("LOSER :: ${}!".format(difference))
-    elif (placed_bet == False):
-        print("- we did not place a bet-")
-    else:
-        print("Wait? Draws are possible? Or did you forget to bet? No change to balance.")
-
-def print_welcome_message():
-    print("WELCOME :: Let's GO!!!!!")
-
-def print_user_stats(rank, streak, balance):
-    print("USER STATS :: Rank: {0} | Bet Streak: {1} | Balance: {2}".format(rank, streak, balance))
-
-def print_bet_details(fighter, wager, odds):
-    potential_winning = wager * odds
-    print("BET DETAILS :: Putting ${0} on {1} at {2:.2f} odds for a chance at ${3:.0f}".format(wager, fighter, odds, potential_winning))
-
-def print_site_message(message):
-    print("SALTY NOTE :: {}".format(message))
-
-def print_winner(winner):
-    print("WINNER: {} wins!".format(winner))
 
 def main():
     # Login to SaltyBet
@@ -76,6 +43,7 @@ def main():
     prev_balance = site.get_USER_balance()
     duration = 0
     placed_bet = False
+    Salty_Bet = dict()
 
     while(True):
         time.sleep(7)
@@ -95,8 +63,21 @@ def main():
         #  Status can be open, locked, 1, 2 (the numbers denote player1 or player2 victory)
         if(prev_status != 'open' and status == 'open'):
 
-            print_last_match_results(prev_balance, user_balance, placed_bet)
+            if(placed_bet):
+                print_last_match_results(prev_balance, user_balance, placed_bet)
+                changed = user_balance - prev_balance
+                Salty_Bet.update({'Delta':changed})
+                with open('result.json', 'a+') as fp:
+                    json.dump(Salty_Bet, fp)
+                    fp.write('\n')
+
             print_user_stats(site.get_USER_leaderboard_rank(), site.get_USER_bet_streak(), site.get_USER_balance())
+
+            # log details for archiving
+            # we want to know - timestamp, if we bet, who we thought had better odds, actual at bet  odds, if we won/loss, amount bet, amount plus/minus, if tournament, exhibition, or matchmaking
+            #time, placed_bet, odds, Pa, wager, fighter
+
+
             print_match_details(player1stats, player2stats, Pa, Pb)
             placed_bet = False
 
@@ -110,11 +91,14 @@ def main():
                 current_bet = player2stats['fighter']
 
             # determine_wager
-            if "bracket" in site.get_remaining():
+            game_mode = site.get_match_type()
+            if game_mode == "bracket":
                 if (user_balance > 10000):
                     wager = int(user_balance * 0.1)
                 else:
                     wager = user_balance
+            elif game_mode == "exhibition":
+                wager = 1
             else:
                 if (user_balance < 3000):
                     wager = user_balance
@@ -122,6 +106,7 @@ def main():
                     wager = int(user_balance * .5)
                 else:
                     wager = int(user_balance * 0.05)
+
             try:
                 placebet(session, fighter, wager)
             except:
@@ -129,6 +114,8 @@ def main():
 
             prev_balance = user_balance
             placed_bet = True
+            Salty_Bet.clear()
+            Salty_Bet.update({'Balance':user_balance, 'P1':player1name, 'P2':player2name, 'P1-win':Pa, 'P2-win':Pb, 'Wager':wager, 'GameMode':game_mode})
 
         elif (prev_status == 'open' and status == 'locked'):
             if (int(site.get_player1_wagers()) > int(site.get_player2_wagers())):
@@ -141,16 +128,19 @@ def main():
                     odds = 1 / odds
             print_bet_details(current_bet, wager, odds)
             print_site_message(site.get_remaining())
+            Salty_Bet.update({'Odds':odds})
 
         elif (prev_status != '1' and status == '1'):
             print_winner(site.get_player1_name())
             (Wr, Lr) = DetermineNewRankings(player1stats.get('elo'), Pb, player2stats.get('elo'), Pa)
             db.insert_ranking(site.get_player1_name(), Wr, site.get_player2_name(), Lr)
+            Salty_Bet.update({'Winner':'P1'})
 
         elif (prev_status != '2' and status == '2'):
             print_winner(site.get_player2_name())
             (Wr, Lr) = DetermineNewRankings(player2stats.get('elo'), Pb, player1stats.get('elo'), Pa)
             db.insert_ranking(site.get_player2_name(), Wr, site.get_player1_name(), Lr)
+            Salty_Bet.update({'Winner':'P2'})
 
 if __name__ == '__main__':
     main()
