@@ -75,13 +75,18 @@ class scrape:
             except:
                 time.sleep(1)
                 retries -= 1
+        return self.get_retry()
 
     def update(self):
         # Refresh the request
         self.request = self.get_retry()
         refreshContent = self.session.get(config.STATE_URL).content
-        if(refreshContent is not None):
-            new_match = json.loads(refreshContent)
+        if(refreshContent != None or refreshContent != ''):
+            try:
+                new_match = json.loads(refreshContent)
+            except ValueError:
+                print('Response content is not valid JSON')
+                return self.update()
 
         if (self.match_json != new_match):
             try:

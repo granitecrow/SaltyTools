@@ -41,7 +41,6 @@ def main():
 
     prev_status, status = "None", "None"
     prev_balance = site.get_USER_balance()
-    duration = 0
     placed_bet = False
     Salty_Bet = dict()
 
