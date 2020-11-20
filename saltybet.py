@@ -1,9 +1,3 @@
-# TODO: create a user class that contains login credentials and stats
-# TODO: log the result of the fight to the big database
-# TODO: if we bet last round then update if we won or loss
-# TODO: log the result of our betting to our database
-# TODO: determine the wager for the fight
- 
 import os
 import sys
 import time
@@ -42,15 +36,18 @@ def main():
     prev_status, status = "None", "None"
     prev_balance = site.get_USER_balance()
     placed_bet = False
+
+    # This dictionary will build a result.json file for historical checking
     Salty_Bet = dict()
 
     while(True):
         time.sleep(7)
 
         prev_status = status
+       
         try:
             site.update()
-        except:
+        except: #try again in case we receive connection refused errors
             session, request = authenticate.login(user, pwd)
             site = saltysite.scrape(session, request)
         
@@ -77,16 +74,10 @@ def main():
 
             print_user_stats(site.get_USER_leaderboard_rank(), site.get_USER_bet_streak(), site.get_USER_balance())
 
-            # log details for archiving
-            # we want to know - timestamp, if we bet, who we thought had better odds, actual at bet  odds, if we won/loss, amount bet, amount plus/minus, if tournament, exhibition, or matchmaking
-            #time, placed_bet, odds, Pa, wager, fighter
-
-
             print_match_details(player1stats, player2stats, Pa, Pb)
             placed_bet = False
 
-            # determine_fighter
-            #if player1stats.get('win_ratio') > player2stats.get('win_ratio'):
+            # determine_fighter base on higher ELO rating
             if Pa > Pb:
                 fighter = player.P1
                 current_bet = player1stats['fighter']
@@ -94,7 +85,7 @@ def main():
                 fighter = player.P2
                 current_bet = player2stats['fighter']
 
-            # determine_wager
+            # determine_wager - would be nice to put some real logic here some day!
             game_mode = site.get_match_type()
             if game_mode == "bracket":
                 if (user_balance > 10000):
