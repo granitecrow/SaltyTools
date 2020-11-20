@@ -48,7 +48,12 @@ def main():
         time.sleep(7)
 
         prev_status = status
-        site.update()
+        try:
+            site.update()
+        except:
+            session, request = authenticate.login(user, pwd)
+            site = saltysite.scrape(session, request)
+        
         status = site.get_betting_status()
 
         if(prev_status != status):

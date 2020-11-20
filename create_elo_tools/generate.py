@@ -1,13 +1,8 @@
 import os
+import wget
 import sqlite3
 import math
 
-# CREATE TABLE fights(id integer primary key autoincrement,winner text,loser text,count integer);
-# add elo: ALTER TABLE ranking elo default 1000
-# open database
-# for each row of the fights table
-# read elo rating of player 1
-# read elo rating of player 2
 #constant K - we can tweak in here
 
 def Probability(rating1, rating2):
@@ -20,10 +15,8 @@ def DetermineNewRankings(winnerRa, winnerPa, loserRb, loserPb):
     return (winnerRa, loserRb)
     
 def ExpectedProbabilities(Ra, Rb):
-    #Probability of Player A
-    Pa = Probability(Rb, Ra)
-    #Probability of Player B
-    Pb = Probability(Ra, Rb)
+    Pa = Probability(Rb, Ra)    #Probability of Player A
+    Pb = Probability(Ra, Rb)    #Probability of Player B
     return (Pa, Pb)
 
 def db_connect(db_path):
@@ -40,12 +33,29 @@ def set_fighter_rank(fighter, rank):
     query_str = 'UPDATE rankings SET elo=? WHERE fighter=?'
     fightercur.execute(query_str,(rank, fighter,))
 
-database = "saltybet.sqlite3.bin"
+def download_file(local_path, link):
+    if not os.path.exists(local_path):
+        print("Downloading from %s, this may take a while..." % link)
+        wget.download(link, local_path)
+        print()
+    return local_path
+
+
+# add steps to go download latest sqlite database from github
+# add ranking field
+
 K = 30
 
-conn = db_connect(database)
+# download the latest database from imaprettykitty
+database = download_file("saltybet.sqlite3.bin", "https://salty.imaprettykitty.com/saltybet.sqlite3.bin")
 
+# connect to the database
+conn = db_connect("saltybet.sqlite3.bin")
 cur = conn.cursor()
+
+cur.execute('DROP TABLE current')
+cur.execute('ALTER TABLE rankings ADD COLUMN elo default 1000')
+
 fightercur = conn.cursor()
 query_str = 'UPDATE rankings SET elo=? WHERE fighter=?'
 
