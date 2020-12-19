@@ -1,13 +1,23 @@
-from bs4 import BeautifulSoup
 import requests
 import time
 import json
+from bs4 import BeautifulSoup
 
 #local imports
 import config
 
 class scrape:
     def __init__(self, session, request):
+        """
+        Parameters
+        ----------
+        session : Session
+            session object that persists website parameters and cookies
+        request : Response
+            response object from server information
+        """
+        #TODO raise appropriate connection errors
+
         # Match session
         self.session = session
         self.request = request
@@ -20,15 +30,19 @@ class scrape:
         self.leaderboardRank = soup.find("span", id="leaderboardRank")
 
     def get_USER_bet_streak(self):
+        """Returns the current bet streak of the logged in user."""
         return self.betStreak.text
 
     def get_USER_leaderboard_rank(self):
+        """Returns the current leaderboard ranking of the logged in user."""
         return self.leaderboardRank.text
 
     def get_USER_balance(self):
+        """Returns the current balance ranking of the logged in user."""
         return self.balance
 
     def get_match_type(self):
+        """Returns the current match type that is currently being running (Matchmaking, Tournament, Exhibition)."""
         note = self.match_json['remaining']
         if "left in the bracket" in note:               # '_ characters are left in the bracket!' -> tournament
             return "tournament"
@@ -73,11 +87,12 @@ class scrape:
             try:
                 return self.session.get(self.request.url)
             except:
-                time.sleep(1)
+                time.sleep(2)
                 retries -= 1
         return self.get_retry()
 
     def update(self):
+        """Returns the current state of the website by refreshing the session."""
         # Refresh the request
         self.request = self.get_retry()
         refreshContent = self.session.get(config.STATE_URL).content
