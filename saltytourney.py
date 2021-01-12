@@ -50,7 +50,7 @@ html_string = """
 """
 
 def parse_url(url):
-    response = requests.get(TOURNEY_URL)
+    response = requests.get(url)
     soup = BeautifulSoup(response.text, 'lxml')
     return soup.find('table', id='bracket')
 
@@ -107,15 +107,11 @@ def determine_match_winners(fighters):
             winners.append(i[1])
     return winners
 
-
-
 def main():
 
     db = saltydb.Database('saltybet.sqlite3.bin')
 
-    # test data; replace with parse_url function for live
-    soup = BeautifulSoup(html_string, 'lxml')
-    table = soup.find('table', id='bracket')
+    table = parse_url(config.TOURNEY_URL)
     df = parse_table(table)
 
     fighter_list = df['Round 1'].tolist()
