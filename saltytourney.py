@@ -12,8 +12,6 @@ import config
 import saltydb
 from elo import *
 
-url = 'https://www.saltybet.com/shaker?bracket=1'
-
 html_string = """
     <table id="bracket" style="margin: 0 auto;border-collapse:initial;">
             <tr><th>Round 1</th><th>Round 2</th><th>Round 3</th><th>Final</th><th>Winner</th></tr>
@@ -52,7 +50,7 @@ html_string = """
 """
 
 def parse_url(url):
-    response = requests.get(url)
+    response = requests.get(TOURNEY_URL)
     soup = BeautifulSoup(response.text, 'lxml')
     return soup.find('table', id='bracket')
 
