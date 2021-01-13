@@ -45,11 +45,14 @@ def main():
 
         prev_status = status
        
-        try:
-            site.update()
-        except: #try again in case we receive connection refused errors
-            session, request = authenticate.login(user, pwd)
-            site = saltysite.scrape(session, request)
+        site.update()
+
+        # I think this is what caused the DDOS attack
+        #try:
+        #    site.update()
+        #except: #try again in case we receive connection refused errors
+        #    session, request = authenticate.login(user, pwd)
+        #    site = saltysite.scrape(session, request)
         
         status = site.get_betting_status()
 
@@ -77,13 +80,26 @@ def main():
             print_match_details(player1stats, player2stats, Pa, Pb)
             placed_bet = False
 
-            # determine_fighter base on higher ELO rating
-            if Pa > Pb:
+            isP1favored = Pa > Pb
+            # simulate matches so that we select underdogs at same percentage of their win chance
+            sim_game = random.randrange(0, 9999, 1) #hardcode 10000 matches; step of 1
+            didP1win = sim_game < (Pa * 10000)
+            if (didP1win == True and isP1favored == True):
                 fighter = player.P1
                 current_bet = player1stats['fighter']
-            else:
+                print(f"SIMULATING :: Taking the favorite with fighter {player1stats['fighter']}")
+            elif (didP1win == True and isP1favored == False):
+                fighter = player.P1
+                current_bet = player1stats['fighter']
+                print(f"SIMULATING :: Taking the underdog with fighter {player1stats['fighter']}")
+            elif (didP1win == False and isP1favored == True):
                 fighter = player.P2
                 current_bet = player2stats['fighter']
+                print(f"SIMULATING :: Taking the underdog with fighter {player2stats['fighter']}")
+            else: #(didP1win == False & isP1favored == False):
+                fighter = player.P2
+                current_bet = player2stats['fighter']
+                print(f"SIMULATING :: Taking the favorite with fighter {player2stats['fighter']}")
 
             # determine_wager - would be nice to put some real logic here some day!
             game_mode = site.get_match_type()
