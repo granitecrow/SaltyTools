@@ -57,21 +57,31 @@ def lookup_ELO(db, fighter):
     player = db.retrieve_fighter(fighter)
     return player.get('elo')
 
-def determine_match_winners(fighters):
-    winners = []
+def determine_match_results(fighters):
+    match_results = []
     sim_games = 9999
     for i in zip(fighters[0::2], fighters[1::2]):
         (Pa, Pb) = ExpectedProbabilities(i[0][1], i[1][1])
+        print(f'{i[0][0]}, ELO: {i[0][1]:.0f}, Win Chance: {Pa:.0%} vs {i[1][0]}, ELO:{i[1][1]:.0f}, Win Chance: {Pb:.0%}')
+
+        isP1favored = Pa > Pb
         play_game = random.randrange(0, sim_games, 1)
-        if(play_game < (Pa * sim_games)):
-            Pa = Pa * 100
-            print(f'Fighter: {i[0][0]} | {Pa:.0f}%')
-            winners.append(i[0])
-        else:
-            Pb = Pb * 100
-            print(f'Fighter: {i[1][0]} | {Pb:.0f}%')
-            winners.append(i[1])
-    return winners
+        didP1win = play_game < (Pa * sim_games)
+
+        if (didP1win == True and isP1favored == True):
+            print(f'{i[0][0]} wins!')
+            match_results.append(i[0])
+        elif (didP1win == True and isP1favored == False):
+            print(f'Upset! {i[0][0]} wins!')
+            match_results.append(i[0])
+        elif (didP1win == False and isP1favored == True):
+            print(f'Upset! {i[1][0]} wins!')
+            match_results.append(i[1])
+        else: #(didP1win == False & isP1favored == False):
+            print(f'{i[1][0]} wins!')
+            match_results.append(i[1])
+    return match_results
+
 
 def main():
 
@@ -84,13 +94,13 @@ def main():
     fighters = [(fighter,lookup_ELO(db, fighter)) for fighter in fighters]
 
     print('\nRound 1 Winners')
-    first_rnd_winners = determine_match_winners(fighters)
+    first_rnd_winners = determine_match_results(fighters)
     print('\nRound 2 Winners')
-    second_rnd_winners = determine_match_winners(first_rnd_winners)
+    second_rnd_winners = determine_match_results(first_rnd_winners)
     print('\nRound 3 Winners')
-    third_rnd_winners = determine_match_winners(second_rnd_winners)
+    third_rnd_winners = determine_match_results(second_rnd_winners)
     print('\nChampion')
-    champion = determine_match_winners(third_rnd_winners)
+    champion = determine_match_results(third_rnd_winners)
 
     df_projected = df.copy()
 
@@ -133,11 +143,6 @@ def main():
     # create a new list for round 3 winners
     # push to specific locations in the data frame
     # do the final and update
-
-
-
-
-
 
 if __name__ == '__main__':
     main()
