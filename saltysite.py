@@ -17,7 +17,6 @@ class scrape:
             response object from server information
         """
         #TODO raise appropriate connection errors
-
         # Match session
         self.session = session
         self.request = request
