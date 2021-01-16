@@ -115,9 +115,10 @@ def main():
                     wager = user_balance
                 elif (user_balance < 10000):
                     wager = int(user_balance * .5)
-                else:
+                elif (user_balance < 1000000):
                     wager = int(user_balance * 0.05)
-
+                else:
+                    wager = int(user_balance * 0.02)
             try:
                 placebet(session, fighter, wager)
             except:
