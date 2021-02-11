@@ -100,7 +100,7 @@ class scrape:
                 new_match = json.loads(refreshContent)
             except ValueError:
                 print('Response content is not valid JSON')
-                return self.update()
+                pass
 
         if (self.match_json != new_match):
             try:

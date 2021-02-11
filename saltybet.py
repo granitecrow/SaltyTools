@@ -46,14 +46,7 @@ def main():
         prev_status = status
        
         site.update()
-
-        # I think this is what caused the DDOS attack
-        #try:
-        #    site.update()
-        #except: #try again in case we receive connection refused errors
-        #    session, request = authenticate.login(user, pwd)
-        #    site = saltysite.scrape(session, request)
-        
+       
         status = site.get_betting_status()
 
         if(prev_status != status):
@@ -74,6 +67,13 @@ def main():
                 with open('result.json', 'a+') as fp:
                     json.dump(Salty_Bet, fp)
                     fp.write('\n')
+                # if changed > 100,000 -> play 
+                # if changed > 500,000 -> play 
+                # if changed > 1,000,000 -> play 
+                # if changed > -100,000 -> play 
+                # if changed > -500,000 -> play 
+                # if changed > -1,000,000 -> play 
+
 
             print_user_stats(site.get_USER_leaderboard_rank(), site.get_USER_bet_streak(), site.get_USER_balance())
 
