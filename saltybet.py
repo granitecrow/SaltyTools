@@ -11,12 +11,12 @@ from bs4 import BeautifulSoup
 
 #local imports
 import authenticate
-from placebet import *
+import placebet
 from consoledisplay import *
 import saltysite
 import config
 import saltydb
-from elo import *
+import elo
 
 class player(Enum):
     P1 = 'player1'
@@ -55,7 +55,7 @@ def main():
             player2name = site.get_player2_name()
             player1stats = db.retrieve_fighter(player1name)
             player2stats = db.retrieve_fighter(player2name)
-            (Pa, Pb) = ExpectedProbabilities(player1stats.get('elo'), player2stats.get('elo'))
+            (Pa, Pb) = elo.ExpectedProbabilities(player1stats.get('elo'), player2stats.get('elo'))
 
         #  Status can be open, locked, 1, 2 (the numbers denote player1 or player2 victory)
         if(prev_status != 'open' and status == 'open'):
@@ -67,7 +67,7 @@ def main():
                 with open('result.json', 'a+') as fp:
                     json.dump(Salty_Bet, fp)
                     fp.write('\n')
-                # if changed > 100,000 -> play 
+                # if changed > 100,000 -> play audio
                 # if changed > 500,000 -> play 
                 # if changed > 1,000,000 -> play 
                 # if changed > -100,000 -> play 
@@ -120,7 +120,7 @@ def main():
                 else:
                     wager = int(user_balance * 0.02)
             try:
-                placebet(session, fighter, wager)
+                placebet.placebet(session, fighter, wager)
             except:
                 print("Error placing bet.")
 
@@ -144,13 +144,13 @@ def main():
 
         elif (prev_status != '1' and status == '1'):
             print_winner(site.get_player1_name())
-            (Wr, Lr) = DetermineNewRankings(player1stats.get('elo'), Pb, player2stats.get('elo'), Pa)
+            (Wr, Lr) = elo.DetermineNewRankings(player1stats.get('elo'), Pb, player2stats.get('elo'), Pa)
             db.insert_ranking(site.get_player1_name(), Wr, site.get_player2_name(), Lr)
             Salty_Bet.update({'Winner':'P1'})
 
         elif (prev_status != '2' and status == '2'):
             print_winner(site.get_player2_name())
-            (Wr, Lr) = DetermineNewRankings(player2stats.get('elo'), Pb, player1stats.get('elo'), Pa)
+            (Wr, Lr) = elo.DetermineNewRankings(player2stats.get('elo'), Pb, player1stats.get('elo'), Pa)
             db.insert_ranking(site.get_player2_name(), Wr, site.get_player1_name(), Lr)
             Salty_Bet.update({'Winner':'P2'})
 
