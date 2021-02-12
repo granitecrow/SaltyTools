@@ -66,7 +66,7 @@ for row in cur:
     try:
         Wr = get_fighter_rank(winner)
         Lr = get_fighter_rank(loser)
-        print("{0} beat {1}".format(winner,loser))
+        #print("{0} beat {1}".format(winner,loser))
         (Wp, Lp) = ExpectedProbabilities(Wr, Lr)
         (Wr, Lr) = DetermineNewRankings(Wr, Wp, Lr, Lp)
 
